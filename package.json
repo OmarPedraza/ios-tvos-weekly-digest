@@ -1,0 +1,30 @@
+{
+  "name": "ios-tvos-weekly-digest",
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20",
+    "npm": ">=10"
+  },
+  "scripts": {
+    "build": "tsc",
+    "digest": "npm run build && npm run start",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@notionhq/client": "^5.11.1",
+    "dotenv": "^17.3.1",
+    "node-fetch": "^3.3.2",
+    "nodemailer": "^8.0.1",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "@types/nodemailer": "^7.0.11",
+    "@types/xml2js": "^0.4.14",
+    "@vitest/coverage-v8": "^4.1.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.5"
+  }
+}
