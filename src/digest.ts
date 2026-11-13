@@ -21,8 +21,7 @@ const SOURCE_FETCHERS = [
 ] as const;
 
 /**
- * Returns the previous calendar week's range
- * (Monday 00:00 → Sunday 23:59:59.999)
+ * Returns the previous calendar week's UTC range from Monday through Sunday.
  */
 function getPreviousWeekRange(now = new Date()) {
   const current = new Date(now.toISOString());
@@ -46,6 +45,9 @@ function getPreviousWeekRange(now = new Date()) {
   };
 }
 
+/**
+ * Fetches, filters, enriches, and delivers the weekly digest items.
+ */
 export async function generateDigest() {
   const startedAt = Date.now();
   logger.info("Digest started", { dryRun: config.dryRun });
@@ -160,6 +162,9 @@ export async function generateDigest() {
   });
 }
 
+/**
+ * Normalizes unknown failures into a log-friendly message.
+ */
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;

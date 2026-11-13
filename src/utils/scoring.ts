@@ -1,5 +1,8 @@
 import type { SourceItem } from "../types.js";
 
+/**
+ * Assigns a relevance score based on source type and keyword heuristics.
+ */
 export function scoreItem(item: SourceItem): number {
   let score = 0;
   const text = `${item.title} ${item.excerpt ?? ""}`.toLowerCase();

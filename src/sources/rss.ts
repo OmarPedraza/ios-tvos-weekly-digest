@@ -21,6 +21,9 @@ const FEEDS = [
   "https://swiftrocks.com/rss.xml"                   // SwiftRocks Blog
 ];
 
+/**
+ * Fetches and normalizes items from the configured RSS and Atom feeds.
+ */
 export async function fetchRSS() {
   logger.info("RSS fetch started", { feeds: FEEDS.length });
 
@@ -70,6 +73,9 @@ export async function fetchRSS() {
   return items;
 }
 
+/**
+ * Downloads a feed, strips any preamble, and parses it into feed items.
+ */
 async function parseFeed(url: string) {
   const text = await withRetry(async () => {
     const response = await fetchWithTimeout(

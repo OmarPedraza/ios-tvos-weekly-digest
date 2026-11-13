@@ -7,6 +7,9 @@ export type Section =
   | "🧪 CI"
   | "💬 Community";
 
+/**
+ * Maps an item and its tags into the digest section used for presentation.
+ */
 export function sectionForItem(item: any): Section {
   const tags: string[] = item.tags ?? [];
   const text = `${item.title} ${item.excerpt ?? ""}`.toLowerCase();

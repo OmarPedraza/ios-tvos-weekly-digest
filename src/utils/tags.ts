@@ -1,5 +1,8 @@
 import type { SourceItem } from "../types.js";
 
+/**
+ * Extracts digest tags from an item's title and excerpt content.
+ */
 export function extractTags(item: SourceItem): string[] {
   const text = `${item.title} ${item.excerpt ?? ""}`.toLowerCase();
   const tags: string[] = [];

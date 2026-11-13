@@ -1,5 +1,8 @@
 import type { DigestItem } from "../types.js";
 
+/**
+ * Renders the digest items into the HTML email layout.
+ */
 export function renderHTMLDigest(items: DigestItem[], notionDatabaseID?: string) {
   const sections = groupBy(items, "section");
 
@@ -69,7 +72,9 @@ export function renderHTMLDigest(items: DigestItem[], notionDatabaseID?: string)
   `;
 }
 
-// Generic, safe groupBy
+/**
+ * Groups items by a stringified property value for email section rendering.
+ */
 function groupBy<T>(items: T[], key: keyof T): Record<string, T[]> {
   return items.reduce((groups: Record<string, T[]>, item) => {
     const groupKey = String(item[key] ?? 'Uncategorized');

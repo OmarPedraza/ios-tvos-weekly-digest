@@ -18,6 +18,9 @@ interface HFResponse {
   summary_text?: string;
 }
 
+/**
+ * Summarizes long text with Hugging Face and falls back to heuristics when needed.
+ */
 export async function summarize(text?: string): Promise<string> {
   if (!text || text.length < 120) {
     logger.info("Skipping summarization for short text", {
@@ -57,6 +60,9 @@ export async function summarize(text?: string): Promise<string> {
   return result;
 }
 
+/**
+ * Calls the Hugging Face summarization endpoint or the local fallback path.
+ */
 async function hfSummarize(text: string): Promise<string> {
   const apiKey = config.hfAPIKey;
   if (!apiKey) {
@@ -133,6 +139,9 @@ async function hfSummarize(text: string): Promise<string> {
   return summaryText;
 }
 
+/**
+ * Splits large text into fixed-size chunks for incremental summarization.
+ */
 function chunkText(text: string, size: number): string[] {
   const chunks: string[] = [];
 
@@ -143,6 +152,9 @@ function chunkText(text: string, size: number): string[] {
   return chunks;
 }
 
+/**
+ * Removes repeated whitespace and common boilerplate from scraped content.
+ */
 function cleanText(text: string): string {
   return text
     .replace(/\s+/g, " ")
@@ -150,11 +162,12 @@ function cleanText(text: string): string {
     .trim();
 }
 
-// 🔥 Better fallback for technical content
+/**
+ * Produces a simple summary by keeping the densest sentences from the source text.
+ */
 function smartFallback(text: string): string {
   const sentences = text.split(". ");
 
-  // prioritize longer sentences (more information)
   const ranked = sentences
     .map(sentence => ({ sentence, score: sentence.length }))
     .sort((a, b) => b.score - a.score);

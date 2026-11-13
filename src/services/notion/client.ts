@@ -7,6 +7,9 @@ type NotionClient = Client & {
   parentPageID: string;
 };
 
+/**
+ * Creates a configured Notion client when the required credentials are present.
+ */
 export function createNotionClient(): NotionClient | undefined {
   if (config.notion.apiKey && config.notion.parentPageID) {
     const client = new Client({ auth: config.notion.apiKey }) as NotionClient;

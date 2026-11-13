@@ -6,6 +6,9 @@ import { logger } from "../utils/logger.js";
 import { renderHTMLDigest } from "./template.js";
 import type { DigestItem } from "../types.js";
 
+/**
+ * Sends the rendered digest email through the configured SMTP account.
+ */
 export async function sendEmail(items: DigestItem[], databaseID?: string) {
   logger.info("Preparing digest email", {
     to: config.email.target,
@@ -54,6 +57,9 @@ export async function sendEmail(items: DigestItem[], databaseID?: string) {
   }
 }
 
+/**
+ * Normalizes unknown failures into a log-friendly message.
+ */
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;
