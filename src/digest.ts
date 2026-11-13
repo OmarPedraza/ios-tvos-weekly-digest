@@ -12,13 +12,31 @@ import { logger } from "./utils/logger.js";
 import { scoreItem } from "./utils/scoring.js";
 import { sectionForItem } from "./utils/sections.js";
 import { extractTags } from "./utils/tags.js";
-import type { DigestItem } from "./types.js";
+import type {
+  DigestItem, 
+  SourceItem 
+} from "./types.js";
+import pLimit from "p-limit";
 
 const SOURCE_FETCHERS = [
   { name: "Reddit", run: fetchReddit },
   { name: "RSS", run: fetchRSS },
   { name: "GitHub", run: fetchGitHub }
 ] as const;
+
+async function createDigestItem(sourceItem: SourceItem): Promise<DigestItem> {
+  const tags = extractTags(sourceItem);
+  return {
+    date: sourceItem.date,
+    score: scoreItem(sourceItem),
+    section: sectionForItem({ ...sourceItem, tags }),
+    source: sourceItem.source,
+    summary: await summarize(sourceItem.excerpt),
+    title: sourceItem.title,
+    url: sourceItem.url,
+    tags: tags
+  };
+}
 
 /**
  * Returns the previous calendar week's range
@@ -101,20 +119,11 @@ export async function generateDigest() {
   const enrichmentStartedAt = Date.now();
   logger.info("Enrichment started", { count: limited.length });
 
+  const limit = pLimit(3);
   const enriched: DigestItem[] = await Promise.all(
-    limited.map(async item => {
-      const tags = extractTags(item);
-      return {
-        date: item.date,
-        score: scoreItem(item),
-        section: sectionForItem({ ...item, tags }),
-        source: item.source,
-        summary: await summarize(item.excerpt),
-        title: item.title,
-        url: item.url,
-        tags: tags
-      };
-    })
+    limited.map(item =>
+      limit(() => createDigestItem(item))
+    )
   );
 
   logger.info("Enrichment completed", {
