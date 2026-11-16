@@ -3,6 +3,9 @@ import { logger } from "./logger.js";
 export class RetryError extends Error {
   status?: number
 
+  /**
+   * Creates a retry-aware error that can carry an HTTP status code.
+   */
   constructor(
     message: string, 
     status?: number
@@ -13,6 +16,9 @@ export class RetryError extends Error {
     this.status = status
   }
 
+  /**
+   * Builds a retry-aware error from an HTTP response snapshot.
+   */
   static fromHTTP(
     context: string,
     status: number,
@@ -29,6 +35,9 @@ export class RetryError extends Error {
   }
 }
 
+/**
+ * Reads an HTTP response body and wraps it in a retry-aware error.
+ */
 export async function createHTTPRetryError(
   context: string,
   response: Response
@@ -41,6 +50,9 @@ export async function createHTTPRetryError(
   )  
 }
 
+/**
+ * Repeats an async operation with exponential backoff when failures are retryable.
+ */
 export async function withRetry<T>(
   operation: () => Promise<T>,
   options?: {
@@ -86,6 +98,9 @@ export async function withRetry<T>(
   throw new Error("Unreachable")
 }
 
+/**
+ * Classifies whether an HTTP status should be retried.
+ */
 function resolveRetryableFromStatus(status?: number): boolean | undefined {
   if (typeof status !== "number") {
     return undefined
@@ -98,6 +113,9 @@ function resolveRetryableFromStatus(status?: number): boolean | undefined {
   return undefined
 }
 
+/**
+ * Extracts an HTTP status code from supported error shapes.
+ */
 function getErrorStatus(error: unknown): number | undefined {
   if (error instanceof RetryError) {
     return error.status
@@ -115,6 +133,9 @@ function getErrorStatus(error: unknown): number | undefined {
   return undefined
 }
 
+/**
+ * Normalizes unknown failures into a log-friendly message.
+ */
 export function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message

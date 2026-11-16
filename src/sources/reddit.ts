@@ -33,6 +33,9 @@ interface RedditListing {
   };
 }
 
+/**
+ * Fetches the weekly top posts from the configured Reddit communities.
+ */
 export async function fetchReddit() {
   logger.info("Reddit fetch started", { subreddits: SUBREDDITS.length });
 

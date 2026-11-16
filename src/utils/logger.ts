@@ -1,4 +1,7 @@
 export const logger = {
+  /**
+   * Writes an informational log entry as structured JSON.
+   */
   info: (message: string, meta?: Record<string, unknown>) => {
     console.log(JSON.stringify({
       level: "info",
@@ -7,6 +10,9 @@ export const logger = {
     }))
   },
 
+  /**
+   * Writes a warning log entry as structured JSON.
+   */
   warn: (message: string, meta?: Record<string, unknown>) => {
     console.warn(JSON.stringify({
       level: "warn",
@@ -15,6 +21,9 @@ export const logger = {
     }))
   },
 
+  /**
+   * Writes an error log entry as structured JSON.
+   */
   error: (message: string, meta?: Record<string, unknown>) => {
     console.error(JSON.stringify({
       level: "error",

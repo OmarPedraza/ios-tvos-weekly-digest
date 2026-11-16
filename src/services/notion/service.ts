@@ -17,6 +17,9 @@ let hasLoggedMissingDatabaseIDForSave = false;
 
 // -------------------- Weekly helper functions --------------------
 
+/**
+ * Builds the weekly Notion database title for the given date.
+ */
 function buildWeekTitle(date: Date) {
   const { week, year, start, end } = getWeekInfo(date);
 
@@ -28,6 +31,9 @@ function buildWeekTitle(date: Date) {
   return `${year} - Week ${week} - ${formatter.format(start)} to ${formatter.format(end)}`;
 }
 
+/**
+ * Derives ISO-like week metadata and date bounds for a calendar week.
+ */
 function getWeekInfo(date: Date) {
   const utcDate = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
   const day = utcDate.getUTCDay() || 7;
@@ -48,7 +54,9 @@ function getWeekInfo(date: Date) {
 
 // -------------------- Notion functions --------------------
 
-// Finds the weekly database by title
+/**
+ * Searches Notion for an existing weekly database that matches the expected title.
+ */
 async function findWeeklyDatabase(title: string): Promise<string | null> {
   if (!notion) return null;
 
@@ -87,7 +95,9 @@ async function findWeeklyDatabase(title: string): Promise<string | null> {
   return null;
 }
 
-// Checks whether an item already exists in the database by URL
+/**
+ * Checks whether a digest item URL is already present in the target database.
+ */
 async function itemExistsInDatabaseByURL(databaseID: string, url: string): Promise<boolean> {
   if (!notion) return false;
 
@@ -122,7 +132,9 @@ async function itemExistsInDatabaseByURL(databaseID: string, url: string): Promi
   return false;
 }
 
-// Returns the weekly database ID (creates it if missing)
+/**
+ * Resolves the weekly database ID, creating the database when it does not exist.
+ */
 export async function getWeeklyDatabaseID(date: Date): Promise<string | undefined> {
   if (!notion) {
     logger.info("Skipping Notion database lookup because Notion is disabled");
@@ -163,7 +175,9 @@ export async function getWeeklyDatabaseID(date: Date): Promise<string | undefine
   return databaseID;
 }
 
-// Saves an item to the weekly database
+/**
+ * Persists a digest item to the weekly Notion database when syncing is enabled.
+ */
 export async function saveItem(item: DigestItem, weeklyDatabaseID: string | undefined) {
   if (!notion) {
     if (!hasLoggedNotionUnavailableForSave) {
@@ -241,6 +255,9 @@ export async function saveItem(item: DigestItem, weeklyDatabaseID: string | unde
   }
 }
 
+/**
+ * Normalizes unknown failures into a log-friendly message.
+ */
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
   if (typeof error === "string") return error;

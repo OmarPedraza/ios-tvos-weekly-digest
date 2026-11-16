@@ -22,6 +22,9 @@ interface GitHubRelease {
   body: string;
 }
 
+/**
+ * Fetches the latest release item from each tracked GitHub repository.
+ */
 export async function fetchGitHub() {
   logger.info("GitHub fetch started", { repos: REPOS.length });
 

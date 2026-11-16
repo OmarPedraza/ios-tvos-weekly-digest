@@ -1,5 +1,8 @@
 import "dotenv/config";
 
+/**
+ * Reads a required environment variable and fails fast when it is missing.
+ */
 function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {

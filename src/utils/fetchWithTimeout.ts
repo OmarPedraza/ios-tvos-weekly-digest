@@ -1,3 +1,6 @@
+/**
+ * Performs a fetch request that is aborted when the timeout elapses.
+ */
 export async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
