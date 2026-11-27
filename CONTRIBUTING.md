@@ -1,95 +1,61 @@
-# Contributing to iOS & tvOS Weekly Digest
+# Contributing
 
-Thanks for your interest in contributing!
+Contributions should keep the weekly digest simple, reliable and free to run. The application uses TypeScript, native NodeNext ESM and independent integrations to minimize the impact of external failures.
 
-## Project principles
+Before starting, read:
 
-- Keep the project free to run.
-- Prefer simple, maintainable solutions.
-- Keep failures isolated so one source/service does not crash the full run.
-- Preserve safe local development via `DRY_RUN=true`.
-
-## Current architecture
-
-- Main orchestrator: `src/digest.ts`
-- Entry point: `src/index.ts`
-- Source collectors: `src/sources/`
-- External services: `src/services/`
-- Email output: `src/email/`
-- Shared logic: `src/utils/`
+- [`README.md`](README.md) for setup and configuration.
+- [`docs/architecture.md`](docs/architecture.md) for the pipeline and integration boundaries.
+- [`docs/branching-strategy.md`](docs/branching-strategy.md) for branch flows, commit/PR titles, reviews and releases.
+- [`AGENTS.md`](AGENTS.md) for repository-wide engineering instructions (also applicable to human contributors).
 
 ## Local setup
 
 ```bash
-npm install
-```
-
-Build:
-
-```bash
+npm ci
 npm run build
 ```
 
-Run in dry-run mode (recommended while developing):
+For a manual smoke run that does not write to Notion or send email:
 
 ```bash
 DRY_RUN=true npm run digest
 ```
 
-In dry-run mode, email environment variables are optional.
+**This smoke run still fetches external data** and may use the configured summarization service. Do not use it as a substitute for mocked automated tests.
 
-## Adding a new source
+Vitest and Git hook automation are planned for `1.1.0`. When implemented, run the test scripts provided by `package.json` and install hooks using the repository installer. Check which scripts and hooks actually exist before relying on them.
 
-1. Add a new module under `src/sources/`.
-2. Export an async fetcher that returns `SourceItem[]`.
-3. Reuse resilience helpers (for example `withRetry` and `fetchWithTimeout`) where appropriate.
-4. Register the source in `SOURCE_FETCHERS` inside `src/digest.ts`.
+## Branches, commits and PRs
 
-Expected source item shape:
+Create a focused, short-lived branch using one of `feat/`, `fix/`, `docs/`, `ci/` or `chore/`, normally from `develop`. For release stabilization, changes may target an active `release/vX.Y.Z` branch; base new work on its intended target to avoid unrelated changes. Hotfixes are prepared from `main`.
 
-```ts
-export interface SourceItem {
-  date: Date;
-  excerpt?: string;
-  source?: string;
-  title?: string;
-  url?: string;
-}
+Use Conventional Commit subjects for both commits and PR titles:
+
+```text
+feat: add another RSS source
+fix(reddit): handle blocked responses
+docs: clarify local setup
+ci: add build validation
+chore(release): bump version to 1.1.0
+release: v1.1.0
 ```
 
-## Code guidelines
+Normal PRs into `develop` and release branches use squash merges; the PR title becomes the squash commit subject. Production release PRs into `main` use a merge commit. See the [branching strategy](docs/branching-strategy.md) for the exact allowed flows and versioning rules.
 
-- TypeScript with clear types.
-- Keep modules focused and small.
-- Avoid introducing paid or mandatory external services.
-- Keep behavior deterministic where possible.
-- Do not couple source-specific logic into unrelated modules.
+When the PR template is introduced, complete its Summary, Testing and Risk / Impact sections; Additional Notes is optional. Keep PRs narrowly scoped. Avoid leaking credentials, private paths or identifying runtime information in comments, logs and screenshots.
 
-## Reliability guidelines
+## Code and testing practices
 
-- Handle partial failures gracefully.
-- Log actionable context in error paths.
-- Prefer fallback behavior over hard failure when external APIs are optional.
+- Use clear TypeScript types and `.js` extensions for relative runtime imports.
+- Keep source collectors inside `src/sources/`, returning `SourceItem[]`; register new fetchers in `SOURCE_FETCHERS` in `src/digest.ts`.
+- Reuse `withRetry`, `fetchWithTimeout` and structured logging, isolating individual source failures.
+- Preserve UTC week selection, the safety cap, dry-run delivery protection and the ability to operate without Notion or a paid summary service.
+- Test with deterministic time and fixture/mocked HTTP, Notion, SMTP and summary responses. Automated tests must not call production services.
+- Once the test suite is in place, include relevant tests with every new feature or bug fix. Run `npm run build` and relevant available tests before requesting review.
 
-## Validation checklist for PRs
+## Documentation responsibilities
 
-- `npm run build` passes.
-- Manual dry-run completed (`DRY_RUN=true npm run digest`).
-- Docs updated if behavior/config changed.
-- PR description includes what changed and how it was validated.
+The contributor or coding agent implementing a change **must update the affected documentation in the same PR**. That includes code architecture, runtime instructions, configuration keys, release status, decisions and known issues when applicable. Do not rewrite unrelated documents or preserve temporary debugging notes.
 
-## Testing
-
-There is no automated test suite yet. For now, use:
-- TypeScript build for static validation.
-- Dry-run execution for integration-level checks.
-
-## Pull requests
-
-- Keep changes focused.
-- Explain rationale, not only implementation details.
-- Call out trade-offs and follow-up work when relevant.
-
-## Questions
-
-Open an issue or discussion in the repository.
+If a check cannot be run, explain why in the PR rather than marking it as passed. Discuss risky behavioral changes before altering production delivery semantics.

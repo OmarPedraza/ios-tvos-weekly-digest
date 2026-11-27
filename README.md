@@ -1,143 +1,87 @@
 # iOS & tvOS Weekly Digest
 
-Automated weekly digest generator for iOS and tvOS developers, intended to be run manually or from an external scheduler such as cron.
+A TypeScript CLI that collects public iOS/tvOS development news, enriches it and produces a weekly digest delivered by email and optionally saved to Notion.
 
-## What it does
+## How it works
 
-This project collects weekly content from public sources, enriches it, and produces a curated digest.
+1. Collect articles and releases from RSS/Atom, GitHub and Reddit.
+2. Filter to the **previous complete Monday–Sunday week (UTC)**.
+3. Score, tag, categorize and optionally summarize the selected items.
+4. In normal mode, save entries in the week's Notion database (when configured) and send an HTML/text email.
+5. With `DRY_RUN=true`, skip Notion writes and email delivery.
 
-Current pipeline:
-1. Fetches items from Reddit, RSS feeds, and selected GitHub repositories.
-2. Filters to the previous calendar week (Monday-Sunday, UTC).
-3. Scores, tags, and assigns sections.
-4. Optionally summarizes longer excerpts (Hugging Face API if configured, fallback otherwise).
-5. In normal mode, saves items to a weekly Notion database and sends an HTML email.
-6. In dry run mode, performs fetch/enrichment only and logs results.
-
-Main orchestrator: `src/digest.ts`.
+The main pipeline lives in `src/digest.ts`. Individual collection failures are isolated, and optional summarization has a local fallback.
 
 ## Requirements
 
 - Node.js 20+
 - npm 10+
 
-## Install
+## Install and run
 
 ```bash
-npm install
+npm ci
+npm run digest       # compile and execute once
 ```
 
-## Run
-
-Build and run once:
+Other commands:
 
 ```bash
-npm run digest
-```
-
-Run compiled output directly:
-
-```bash
-npm run start
-```
-
-Build only:
-
-```bash
-npm run build
-```
-
-## Cron / NAS usage
-
-A helper script [`run-weekly-digest.sh`](run-weekly-digest.sh) is included. It uses a lockfile to prevent overlapping runs and pipes output to `digest.log`.
-
-Typical setup:
-1. Clone the repo to the NAS.
-2. Run `npm install` once.
-3. Run `npm run build` after each code update.
-4. Schedule `run-weekly-digest.sh` from cron, or call `npm run start` directly.
-
-Example crontab entry using the helper script (every Monday at 09:00):
-
-```cron
-0 9 * * 1 /path/to/ios-tvos-weekly-digest/run-weekly-digest.sh
-```
-
-Or scheduling `npm run start` directly:
-
-```cron
-0 9 * * 1 cd /path/to/ios-tvos-weekly-digest && /usr/bin/env -i PATH=/usr/local/bin:/usr/bin:/bin NODE_ENV=production NOTION_API_KEY=... NOTION_PARENT_PAGE_ID=... EMAIL_USER=... EMAIL_PASS=... TARGET_EMAIL=... HF_API_KEY=... npm run start >> /path/to/logs/ios-tvos-weekly-digest.log 2>&1
-```
-
-If your NAS already loads environment variables from a file or scheduler UI, keep the cron command to:
-
-```bash
-cd /path/to/ios-tvos-weekly-digest && npm run start
-```
-
-## Dry run mode
-
-```bash
+npm run build        # TypeScript compilation to dist/
+npm run start        # execute previously built output
 DRY_RUN=true npm run digest
 ```
 
-When `DRY_RUN=true`:
-- Source collection, filtering, scoring, tagging, and summarization still run.
-- Notion writes are skipped.
-- Email sending is skipped.
+**Dry run is not an offline mode:** source requests and configured summary API calls can still occur. Use mocked tests when network-free validation is required.
 
-## Environment variables
+## Environment configuration
 
-Required for normal runs:
-- `EMAIL_USER`
-- `EMAIL_PASS`
-- `TARGET_EMAIL`
+Copy `.env.example` to an ignored `.env` or supply equivalent environment variables at runtime.
 
-Optional:
-- `DRY_RUN` (set to `true` for safe local runs — email variables are not required when enabled)
-- `HF_API_KEY` (enables Hugging Face summarization API)
-- `NOTION_API_KEY` (enables Notion integration when paired with `NOTION_PARENT_PAGE_ID`)
-- `NOTION_PARENT_PAGE_ID` (required with `NOTION_API_KEY` to create/find weekly databases)
+| Variable | Purpose |
+| --- | --- |
+| `EMAIL_USER` | SMTP account; required for normal email delivery. |
+| `EMAIL_PASS` | SMTP credential; required for normal email delivery. |
+| `TARGET_EMAIL` | Digest recipient; required for normal email delivery. |
+| `NOTION_API_KEY` | Optional Notion integration credential. |
+| `NOTION_PARENT_PAGE_ID` | Optional parent page; needed together with `NOTION_API_KEY`. |
+| `HF_API_KEY` | Optional Hugging Face summary key in the currently verified implementation; a different provider is planned. |
+| `DRY_RUN` | Set to `true` to skip Notion writes and email. |
 
-If Notion variables are missing, the pipeline runs with Notion disabled.
+Never commit credentials or real `.env` values. When Notion credentials are missing, persistence is disabled, but normal email delivery remains available.
 
-For cron jobs, make sure these variables are available in the cron environment. Cron usually runs with a much smaller environment than an interactive shell.
+## Scheduling
 
-## Project layout
+The CLI runs once and exits, so it can be invoked manually or from any supported external scheduler. `run-weekly-digest.sh` is an optional wrapper that uses a lock and appends output to an ignored log. The repository also contains `.github/workflows/weekly.yml`. If using scheduled runs, **enable only the intended delivery path(s)** to avoid duplicate emails.
+
+## Repository layout
 
 ```text
 src/
-    config.ts
-    digest.ts
-    index.ts
-    types.ts
-    email/
-        send.ts
-        template.ts
-    services/
-        notion/
-            client.ts
-            service.ts
-        summarization/
-            summary.ts
-    sources/
-        github.ts
-        reddit.ts
-        rss.ts
-    utils/
-        fetchWithTimeout.ts
-        logger.ts
-        retry.ts
-        scoring.ts
-        sections.ts
-        tags.ts
+  config.ts
+  digest.ts
+  index.ts
+  types.ts
+  email/                 # HTML/text rendering and SMTP
+  services/notion/       # weekly database and entries
+  services/summarization/# optional summaries and fallback
+  sources/               # RSS, GitHub and Reddit
+  utils/                 # timeouts, retry, logging and heuristics
 ```
 
-## Notes on current behavior
+## Development and contribution
 
-- Source failures are isolated: one failing source does not stop digest generation.
-- Summarization gracefully falls back when `HF_API_KEY` is absent or API calls fail.
-- Weekly data in Notion is organized by auto-created weekly databases under a parent page.
+The project uses pull requests and the Git workflow documented in [`docs/branching-strategy.md`](docs/branching-strategy.md). Read [`CONTRIBUTING.md`](CONTRIBUTING.md) for local development and validation.
+
+More technical context:
+
+- [Architecture](docs/architecture.md)
+- [Decisions](docs/decisions.md)
+- [Release roadmap](docs/roadmap.md)
+- [Known issues](docs/known-issues.md)
+- [Instructions for coding agents](AGENTS.md)
+
+Automated tests, PR validation and repository-managed hooks are part of the planned `1.1.0` work; check `package.json` and `.github/workflows/` for their **actual current availability**.
 
 ## License
 
